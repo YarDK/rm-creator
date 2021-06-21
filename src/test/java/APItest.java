@@ -7,6 +7,7 @@ import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Response;
 import org.junit.Test;
 
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,8 @@ public class APItest {
         //list_issues.forEach(issue -> System.out.println(issue_name(issue)));
         list_issues.forEach(System.out::println);
 
+        System.out.println(result_as_json.toString());
+        System.out.println("Зависимости:");
         System.out.println(result_as_json.get("issue").getAsJsonObject().get("relations").toString());
     }
 
@@ -52,7 +55,7 @@ public class APItest {
 
     @Test
     public void test5(){
-        issue_name("248560");
+        issue_name("220794");
     }
     private void issue_name(String issue_id){
         String url = String.format("http://redmine.mango.local/issues/%s.json", issue_id);
@@ -66,7 +69,9 @@ public class APItest {
         System.out.println(result_as_json);
 
         System.out.printf(
-                "Статус для %s: " + result_as_json.get("issue").getAsJsonObject().get("status").getAsJsonObject().get("name").toString(), issue_id);
+                "Status for %s: " + result_as_json.get("issue").getAsJsonObject().get("status").getAsJsonObject().get("name").toString(), issue_id);
+        System.out.printf(
+                "\nID for %s: " + result_as_json.get("issue").getAsJsonObject().get("status").getAsJsonObject().get("id").toString(), issue_id);
     }
 
     @Test
