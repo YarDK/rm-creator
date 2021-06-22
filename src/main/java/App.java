@@ -64,7 +64,7 @@ public class App {
 
     // Метод получает json со всеми связанными тикетами в корневой заявкой
     public void getAllRelationTickets(String old_tiket) {
-        System.out.println("Start request tickets.");
+        System.out.println("Start request tickets from " + old_tiket);
         String url = String.format("http://redmine.mango.local/issues/%s.json?include=relations", old_tiket);
         Response response = RestAssured.given()
                 .auth()
@@ -74,13 +74,14 @@ public class App {
 
         System.out.println("Request tickets done. Status cod: " + response.getStatusCode());
         json_response_relations = JsonParser.parseString(response.asString()).getAsJsonObject();
+        //System.out.println(json_response_relations);
     }
 
     // Создаем множество с номерами тикетов и строим Map "Номер заявки" - relation_id
     public void setIssuesCollection() {
         JsonArray relations = json_response_relations.get("issue").getAsJsonObject().get("relations").getAsJsonArray();
         for (JsonElement e : relations) {
-            String issue_id = e.getAsJsonObject().get("issue_to_id").toString();
+            String issue_id = e.getAsJsonObject().get("issue_id").toString();
             set_issues.add(issue_id);
             issues_relations_id.put(issue_id,
                     e.getAsJsonObject().get("id").toString());
