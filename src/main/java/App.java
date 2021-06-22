@@ -16,27 +16,21 @@ public class App {
     private Map<String, String> issues_relations_id = new HashMap<>();
     private final Set<String> set_issues = new HashSet<>();
 
-    private String rm_user_name; //= "yakorotyshov";
-    private String rm_user_password; // = "VubxexJdTQ";
-
-    public void setRm_user_name(String rm_user_name) {
-        this.rm_user_name = rm_user_name;
-    }
-
-    public void setRm_user_password(String rm_user_password) {
-        this.rm_user_password = rm_user_password;
-    }
+    public String rm_user_name; //= "yakorotyshov";
+    public String rm_user_password; // = "VubxexJdTQ";
+    public String old_ticket;
+    public String new_ticket;
 
     public static void main(String[] args) {
         App app = new App();
         try {
-            app.setRm_user_name(args[0]); // Первый параметр = Имя пользователя в RedMine
-            app.setRm_user_password(args[1]); // Второй параметр = Пароль пользователя в RedMine
-            String old_ticket = args[2]; // Третий параметр = тикет, с которого надо перенести данные
-            String new_ticket = args[3]; // Четвертрый параметр = тикет, в который надо перенести данные
+            app.rm_user_name = args[0]; // Первый параметр = Имя пользователя в RedMine
+            app.rm_user_password = args[1]; // Второй параметр = Пароль пользователя в RedMine
+            app.old_ticket = args[2]; // Третий параметр = тикет, с которого надо перенести данные
+            app.new_ticket = args[3]; // Четвертрый параметр = тикет, в который надо перенести данные
 
             // Получаем списко тикетов
-            app.getAllRelationTickets(old_ticket);
+            app.getAllRelationTickets();
 
             // Вынимаем данные: номер тикета и ID связи
             app.setIssuesCollection();
@@ -45,7 +39,7 @@ public class App {
             app.setIssuesStatusFromJsonObject();
 
             // Добавляем все тикеты в новую заявку, статус которых не равен Закрыт и Отклонен
-            app.addRelationToTicket(new_ticket);
+            app.addRelationToTicket();
 
             // Удаляем все перенесенные тикеты из старой заявки
             app.removeOpenTicketsFromOldMainTicket();
@@ -63,9 +57,9 @@ public class App {
     }
 
     // Метод получает json со всеми связанными тикетами в корневой заявкой
-    public void getAllRelationTickets(String old_tiket) {
-        System.out.println("Start request tickets from " + old_tiket);
-        String url = String.format("http://redmine.mango.local/issues/%s.json?include=relations", old_tiket);
+    public void getAllRelationTickets() {
+        System.out.println("Start request tickets from " + old_ticket);
+        String url = String.format("http://redmine.mango.local/issues/%s.json?include=relations", old_ticket);
         Response response = RestAssured.given()
                 .auth()
                 .basic(rm_user_name, rm_user_password)
@@ -80,8 +74,11 @@ public class App {
     // Создаем множество с номерами тикетов и строим Map "Номер заявки" - relation_id
     public void setIssuesCollection() {
         JsonArray relations = json_response_relations.get("issue").getAsJsonObject().get("relations").getAsJsonArray();
+
         for (JsonElement e : relations) {
             String issue_id = e.getAsJsonObject().get("issue_id").toString();
+            if(issue_id.equals(old_ticket)) issue_id = e.getAsJsonObject().get("issue_to_id").toString();
+
             set_issues.add(issue_id);
             issues_relations_id.put(issue_id,
                     e.getAsJsonObject().get("id").toString());
@@ -108,7 +105,7 @@ public class App {
     }
 
     // Добавляем открытые тикеты в новую задачу, и удаляем их из множества issues_relations_id
-    public void addRelationToTicket(String new_ticket) {
+    public void addRelationToTicket() {
         if(!issues_status.containsValue(5) && !issues_status.containsValue(14)) {
             System.out.println("Issues list not has open issues");
             this.issues_relations_id = null;
