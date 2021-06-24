@@ -8,13 +8,13 @@ import com.jayway.restassured.response.Response;
 import org.junit.Test;
 
 import java.sql.SQLOutput;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class APItest {
 
     private List<String> list_issues = new ArrayList<>();
 
+    // Запрос спикска связанныз зяавок с текущей
     @Test
     public void test1(){
         String url = "http://redmine.mango.local/issues/252198.json?include=relations";
@@ -39,9 +39,12 @@ public class APItest {
 
     // /issues.xml?issue_id=1
 
+
+    // Просто получение заявки
     @Test
     public void test2(){
-        String url = "http://redmine.mango.local/issues/252198.json";
+        String issue = "233958";
+        String url = String.format("http://redmine.mango.local/issues/%s.json", issue);
         Response response = RestAssured.given()
                 .auth()
                 .basic("yakorotyshov","VubxexJdTQ")
@@ -53,6 +56,7 @@ public class APItest {
         System.out.println(result_as_json.toString());
     }
 
+    // Получение заявки и каких-то параметров из ответа
     @Test
     public void test5(){
         issue_name("220794");
@@ -74,6 +78,7 @@ public class APItest {
                 "\nID for %s: " + result_as_json.get("issue").getAsJsonObject().get("status").getAsJsonObject().get("id").toString(), issue_id);
     }
 
+    // Добавление связи
     @Test
     public void test3(){
         String issue_1 = "252198"; // главная
@@ -94,6 +99,7 @@ public class APItest {
     }
 
 
+    // Удаление связи
     @Test
     public void test4(){
         String issue_1 = "252198"; // главная
@@ -111,6 +117,34 @@ public class APItest {
                 .contentType(ContentType.JSON)
                 .delete(url);
         System.out.println(response.getStatusCode());
+
+    }
+
+    // 824 - ID коротышов ярослав
+    // 1774- ID Шитикова Дарья
+
+    // Замена Назначенного сотрудника в заявке
+    @Test
+    public void test6(){
+
+        List<String> set = Arrays.asList(
+                "249835","248560","248516","247978","247611","247620"
+                ,"247383","247331","247201","247183","246701"
+                ,"245061","244921","244435","242307","242165"
+                ,"241253","240094","238956","238776");
+
+
+        for(String issue : set){
+            String url = String.format("http://redmine.mango.local/issues/%s.json", issue);
+            Response response = RestAssured.given()
+                    .auth()
+                    .basic("yakorotyshov","VubxexJdTQ")
+                    .contentType(ContentType.JSON)
+                    .body("{\"issue\": {\"assigned_to_id\": 1774}}") // Шитикова Дарья
+                    .put(url);
+
+            System.out.println(response.getStatusCode());
+        }
 
     }
 
